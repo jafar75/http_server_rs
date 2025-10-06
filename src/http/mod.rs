@@ -6,4 +6,4 @@ pub mod router;
 
 pub use request::HttpRequest;
 pub use response::HttpResponse;
-pub use router::{Handler, Router};
+pub use router::{Router};

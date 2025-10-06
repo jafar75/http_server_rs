@@ -7,17 +7,20 @@ use std::time::Duration;
 use crossbeam::channel::Sender;
 use std::net::TcpStream;
 
+use crate::log;
+
+
 pub fn accept_loop(listener: TcpListener, senders: Arc<Vec<Sender<TcpStream>>>) {
     let mut idx: usize = 0;
     loop {
         match listener.accept() {
             Ok((stream, peer)) => {
-                println!("Accepted connection from {}", peer);
+                log!("Accepted connection from {}", peer);
                 stream.set_nonblocking(true).unwrap();
 
                 // round-robin select worker
                 if let Err(err) = senders[idx].send(stream) {
-                    eprintln!("Failed to send stream to worker {idx}: {err}");
+                    log!("Failed to send stream to worker {idx}: {err}");
                 }
                 idx = (idx + 1) % senders.len();
             }
@@ -27,7 +30,7 @@ pub fn accept_loop(listener: TcpListener, senders: Arc<Vec<Sender<TcpStream>>>) 
             }
             Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
             Err(e) => {
-                eprintln!("Accept error: {}", e);
+                log!("Accept error: {}", e);
                 break;
             }
         }

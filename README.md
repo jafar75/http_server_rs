@@ -57,3 +57,28 @@ cargo run --release
 Then visit:
 - [http://localhost:8080/](http://localhost:8080/) – default message  
 - [http://localhost:8080/hello.html](http://localhost:8080/hello.html) – static HTML file
+
+---
+
+## Benchmark
+To evaluate the performance of this HTTP server, we used [wrk](https://github.com/wg/wrk), a modern HTTP benchmarking tool capable of generating significant load using multiple threads and connections. The following command was run to stress test the server with 10,000 concurrent connections from 10 threads over 60 seconds:
+
+```bash
+user@pc:~$ wrk -t10 -c10000 -d60s http://0.0.0.0:8080/
+Running 1m test @ http://0.0.0.0:8080/
+  10 threads and 10000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    12.33ms   50.18ms   1.79s    99.61%
+    Req/Sec    56.76k    14.76k  108.34k    62.82%
+  33798438 requests in 1.00m, 2.46GB read
+Requests/sec: 562379.78
+Transfer/sec:     41.83MB
+```
+
+### Note on logging
+During high-concurrency benchmarks, printing logs for every connection can significantly degrade performance. To avoid this, the server's internal logging can be toggled using the environment variable `HTTP_SERVER_LOGS`.
+- By default, logging is disabled (false).
+- To enable it, use:
+```bash
+HTTP_SERVER_LOGS=1 cargo run --release
+```

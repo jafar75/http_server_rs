@@ -1,11 +1,20 @@
+mod http;
+mod server;
+
 use std::sync::Arc;
 
-use http_server_rs::{
-    http::{HttpRequest, HttpResponse, Router, request::HttpMethod, response::HttpStatusCode},
-    server::Server,
-};
+use http::{HttpRequest, HttpResponse, Router, request::HttpMethod, response::HttpStatusCode};
+use server::Server;
+
+mod logger;
+
+use logger::init_logging;
+
+#[macro_use]
+mod macros;
 
 fn main() -> std::io::Result<()> {
+    init_logging();
     let mut router = Router::new();
 
     router.register("/", HttpMethod::GET, |_: &HttpRequest| {

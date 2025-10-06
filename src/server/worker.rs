@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use crate::http::{Router, request::parse_http_request};
+use crate::{http::{request::parse_http_request, Router}, log};
 
 struct ConnState {
     stream: mio::net::TcpStream,
@@ -70,7 +70,7 @@ pub fn worker_loop(id: usize, mut poll: Poll, rx: Receiver<TcpStream>, router: A
                     let mut buf = [0u8; 4096];
                     match conn.stream.read(&mut buf) {
                         Ok(0) => {
-                            println!("Worker {id}: client closed (token {:?})", event.token());
+                            log!("Worker {id}: client closed (token {:?})", event.token());
                             action = Action::Close;
                         }
                         Ok(n) => {
@@ -81,7 +81,7 @@ pub fn worker_loop(id: usize, mut poll: Poll, rx: Receiver<TcpStream>, router: A
                         }
                         Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                         Err(e) => {
-                            eprintln!("Worker {id}: read error: {e}");
+                            log!("Worker {id}: read error: {e}");
                             action = Action::Close;
                         }
                     }
@@ -98,7 +98,7 @@ pub fn worker_loop(id: usize, mut poll: Poll, rx: Receiver<TcpStream>, router: A
                         }
                         Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                         Err(e) => {
-                            eprintln!("Worker {id}: write error: {e}");
+                            log!("Worker {id}: write error: {e}");
                             action = Action::Close;
                         }
                     }

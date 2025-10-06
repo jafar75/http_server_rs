@@ -16,7 +16,7 @@ use crate::{http::Router, server::worker::worker_loop};
 mod listener;
 mod worker;
 
-const THREAD_POOL_SIZE: usize = 4;
+const THREAD_POOL_SIZE: usize = 8;
 
 pub struct Server {
     host: String,
@@ -65,69 +65,4 @@ impl Server {
         Ok(())
     }
 
-    // fn worker_loop(id: usize, mut poll: Poll, rx: Receiver<TcpStream>, router: Arc<Router>) {
-    //     let mut events = Events::with_capacity(1024);
-    //     let mut token_counter: usize = 0;
-    //     let mut connections = std::collections::HashMap::new();
-
-    //     println!("Worker {id} started");
-
-    //     loop {
-    //         // register new sockets if any
-    //         while let Ok(stream) = rx.try_recv() {
-    //             let token = Token(token_counter);
-    //             let mut mio_stream = mio::net::TcpStream::from_std(stream);
-    //             poll.registry()
-    //                 .register(
-    //                     &mut mio_stream,
-    //                     token,
-    //                     Interest::READABLE | Interest::WRITABLE,
-    //                 )
-    //                 .unwrap();
-    //             connections.insert(token_counter, mio_stream);
-    //             token_counter += 1;
-    //         }
-
-    //         // poll for events
-    //         if poll
-    //             .poll(&mut events, Some(Duration::from_millis(100)))
-    //             .is_ok()
-    //         {
-    //             for event in &events {
-    //                 let token = event.token();
-    //                 if let Some(_conn) = connections.get_mut(&token.0) {
-    //                     if event.is_readable() {
-    //                         if let Some(conn) = connections.get_mut(&token.0) {
-    //                             let mut buf = [0u8; 1024];
-    //                             match conn.read(&mut buf) {
-    //                                 Ok(0) => {
-    //                                     // Connection closed by client
-    //                                     // println!(
-    //                                     //     "Worker {id}: connection closed (token {:?})",
-    //                                     //     token
-    //                                     // );
-    //                                     poll.registry().deregister(conn).unwrap();
-    //                                     connections.remove(&token.0);
-    //                                 }
-    //                                 Ok(n) => {
-    //                                     if let Some(req) = parse_http_request(&buf[..n]) {
-    //                                         let resp = router.route(&req);
-    //                                         let raw = resp.to_bytes();
-    //                                         let _ = conn.write_all(&raw);
-    //                                     }
-    //                                 }
-    //                                 Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-    //                                 Err(e) => {
-    //                                     eprintln!("Worker {id}: read error: {}", e);
-    //                                     poll.registry().deregister(conn).unwrap();
-    //                                     connections.remove(&token.0);
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 }

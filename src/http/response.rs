@@ -1,4 +1,4 @@
-use std::{fmt::Write, num::ParseIntError};
+use std::fmt::Write;
 
 #[derive(Debug, Clone, Copy)]
 pub enum HttpStatusCode {
@@ -58,8 +58,10 @@ impl HttpResponse {
         res.push_str(&self.body);
         res.into_bytes()
     }
-
+    #[allow(dead_code)]
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+        use std::num::ParseIntError;
+
         let s = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
         let parts: Vec<&str> = s.split("\r\n\r\n").collect();
         if parts.len() != 2 {
