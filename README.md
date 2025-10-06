@@ -12,7 +12,7 @@ Rust implementation of the C10K problem — a high-performance HTTP/1.1 server u
 
 ## Features
 
-- Handles multiple clients concurrently using **epoll**.
+- Handles multiple clients concurrently using **epoll**. It is done via amzaing [**mio**](https://github.com/tokio-rs/mio) crate in Rust.
 - Supports **HTTP/1.1 GET requests**.
 - Serves static files.
 - Minimal, zero-dependency design for performance and simplicity.
