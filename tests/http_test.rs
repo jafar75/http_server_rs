@@ -7,8 +7,8 @@ use std::{
 };
 
 use http_server_rs::{
-    http::{HttpRequest, HttpResponse, Router, request::HttpMethod, response::HttpStatusCode},
-    server::Server,
+    http::{request::HttpMethod, response::HttpStatusCode, HttpRequest, HttpResponse, Router},
+    server::{Server, WorkerBackend},
 };
 
 #[test]
@@ -33,7 +33,7 @@ fn test_http_server() {
     let router = Arc::new(router);
 
     // --- Start server ---
-    let server = Server::new("127.0.0.1", 4000, router.clone());
+    let server = Server::new("127.0.0.1", 4000, router.clone(), WorkerBackend::Epoll);
     thread::spawn(move || {
         server.run().unwrap();
     });

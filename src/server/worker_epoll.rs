@@ -16,7 +16,8 @@ struct ConnState {
     write_pos: usize,
 }
 
-pub fn worker_loop(id: usize, mut poll: Poll, rx: Receiver<TcpStream>, router: Arc<Router>) {
+pub fn worker_loop(id: usize, rx: Receiver<TcpStream>, router: Arc<Router>) {
+    let mut poll = Poll::new().unwrap();
     let mut events = Events::with_capacity(1024);
     let mut token_counter = 0;
     let mut connections: HashMap<usize, ConnState> = HashMap::new();

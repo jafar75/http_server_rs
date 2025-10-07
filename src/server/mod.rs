@@ -1,5 +1,4 @@
 use crossbeam::channel::unbounded;
-use mio::Poll;
 use nix::sys::socket::{
     setsockopt,
     sockopt::{ReuseAddr, ReusePort},
@@ -11,25 +10,39 @@ use std::{
     thread,
 };
 
-use crate::{http::Router, server::worker::worker_loop};
+use crate::http::Router;
 
 mod listener;
-mod worker;
+mod worker_epoll;
+mod worker_uring;
 
 const THREAD_POOL_SIZE: usize = 8;
+
+#[derive(Clone, Copy, Debug)]
+pub enum WorkerBackend {
+    Epoll,
+    IoUring,
+}
 
 pub struct Server {
     host: String,
     port: u16,
     router: Arc<Router>,
+    backend: WorkerBackend,
 }
 
 impl Server {
-    pub fn new(host: impl Into<String>, port: u16, router: Arc<Router>) -> Self {
+    pub fn new(
+        host: impl Into<String>,
+        port: u16,
+        router: Arc<Router>,
+        backend: WorkerBackend,
+    ) -> Self {
         Self {
             host: host.into(),
             port,
             router,
+            backend,
         }
     }
 
@@ -46,10 +59,15 @@ impl Server {
         for i in 0..THREAD_POOL_SIZE {
             let (tx, rx) = unbounded::<TcpStream>();
             senders.push(tx);
-            let poll = Poll::new()?;
             let router = self.router.clone();
-            thread::spawn(move || {
-                worker_loop(i, poll, rx, router);
+            let backend = self.backend;
+            thread::spawn(move || match backend {
+                WorkerBackend::Epoll => {
+                    let _ = worker_epoll::worker_loop(i, rx, router);
+                }
+                WorkerBackend::IoUring => {
+                    let _ = worker_uring::worker_loop(i, rx, router);
+                }
             });
         }
 
@@ -64,5 +82,4 @@ impl Server {
         listener_thread.join().unwrap();
         Ok(())
     }
-
 }

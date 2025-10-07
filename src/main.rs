@@ -1,7 +1,7 @@
 mod http;
 mod server;
 
-use std::sync::Arc;
+use std::{env, sync::Arc};
 
 use http::{HttpRequest, HttpResponse, Router, request::HttpMethod, response::HttpStatusCode};
 use server::Server;
@@ -9,6 +9,8 @@ use server::Server;
 mod logger;
 
 use logger::init_logging;
+
+use server::WorkerBackend;
 
 #[macro_use]
 mod macros;
@@ -32,6 +34,17 @@ fn main() -> std::io::Result<()> {
     });
 
     let router = Arc::new(router);
-    let server = Server::new("0.0.0.0".to_string(), 8080, router);
+
+    // Read backend choice from environment variable
+    let backend = match env::var("WORKER_BACKEND").unwrap_or_else(|_| "epoll".to_string()).to_lowercase().as_str() {
+        "epoll" => WorkerBackend::Epoll,
+        "io_uring" => WorkerBackend::IoUring,
+        other => {
+            eprintln!("Unknown WORKER_BACKEND '{}', defaulting to IoUring", other);
+            WorkerBackend::IoUring
+        }
+    };
+
+    let server = Server::new("0.0.0.0".to_string(), 8080, router, backend);
     server.run()
 }
